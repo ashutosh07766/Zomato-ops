@@ -8,8 +8,8 @@ com/zomato/opspro/model/Order.class
 com/zomato/opspro/service/OrderService.class
 com/zomato/opspro/config/ApplicationInitializer.class
 com/zomato/opspro/model/DeliveryPartner.class
-com/zomato/opspro/controller/AuthController$LoginRequest.class
 com/zomato/opspro/config/CorsConfig.class
+com/zomato/opspro/controller/AuthController$LoginRequest.class
 com/zomato/opspro/controller/DeliveryPartnerController.class
 com/zomato/opspro/service/OrderService$1.class
 com/zomato/opspro/repository/UserRepository.class
