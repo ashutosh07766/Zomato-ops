@@ -14,7 +14,7 @@ const ManagerDashboard = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [selectedPartner, setSelectedPartner] = useState(null);
     const [showCreateOrder, setShowCreateOrder] = useState(false);
-    const [newOrder, setNewOrder] = useState({ orderId: '', items: '', prepTime: 0 });
+    const [newOrder, setNewOrder] = useState({ orderId: '', items: '', prepTime: '' });
     const [createOrderError, setCreateOrderError] = useState('');
     const [showAssignModal, setShowAssignModal] = useState(false);
 
@@ -53,7 +53,7 @@ const ManagerDashboard = () => {
             await orderApi.create(newOrder);
             await fetchData();
             setShowCreateOrder(false);
-            setNewOrder({ orderId: '', items: '', prepTime: 15 });
+            setNewOrder({ orderId: '', items: '', prepTime: '' });
         } catch (err) {
             setError('Failed to create order. Please try again.');
             console.error('Error creating order:', err);
@@ -493,7 +493,7 @@ const ManagerDashboard = () => {
                                         id="prepTime"
                                         min="1"
                                         value={newOrder.prepTime}
-                                        onChange={(e) => setNewOrder({ ...newOrder, prepTime: parseInt(e.target.value) || 0 })}
+                                        onChange={(e) => setNewOrder({ ...newOrder, prepTime: e.target.value })}
                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                                         required
                                     />
