@@ -16,13 +16,18 @@ api.interceptors.request.use(request => {
     if (token) {
         request.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('API Request:', request.method.toUpperCase(), request.url, request.data);
     return request;
 });
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
-    response => response,
+    response => {
+        console.log('API Response:', response.status, response.data);
+        return response;
+    },
     error => {
+        console.error('API Error:', error.response?.status, error.response?.data);
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -38,6 +43,11 @@ export const authApi = {
         const { token, ...userData } = response.data;
         localStorage.setItem('token', token);
         return userData;
+    },
+
+    register: async (username, password, role) => {
+        const response = await api.post('/auth/register', { username, password, role });
+        return response.data;
     },
 };
 
@@ -80,8 +90,15 @@ export const partnerApi = {
     },
 
     create: async (partner) => {
-        const response = await api.post('/partners', partner);
-        return response.data;
+        try {
+            console.log('Creating partner with data:', partner);
+            const response = await api.post('/partners', partner);
+            console.log('Partner creation response:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('Partner creation error:', error.response?.data || error.message);
+            throw error;
+        }
     },
 
     updateAvailability: async (partnerId, isAvailable) => {

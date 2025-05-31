@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { orderApi, partnerApi } from '../services/api';
+import { useNavigate, Routes, Route } from 'react-router-dom';
 
 const ManagerDashboard = () => {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
     const [partners, setPartners] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [view, setView] = useState('active'); // 'active' or 'history'
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [selectedPartner, setSelectedPartner] = useState(null);
     const [showCreateOrder, setShowCreateOrder] = useState(false);
@@ -146,15 +149,6 @@ const ManagerDashboard = () => {
                             </div>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <button
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors duration-200"
-                                onClick={() => setShowCreateOrder(true)}
-                            >
-                                <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                Create Order
-                            </button>
                             <div className="flex items-center space-x-3">
                                 <span className="text-gray-700">Welcome, {user?.username}</span>
                                 <button
@@ -187,6 +181,42 @@ const ManagerDashboard = () => {
                         </div>
                     </div>
                 )}
+
+                {/* View Toggle Buttons */}
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold text-gray-800">Manager Dashboard</h1>
+                    <div className="flex space-x-4">
+                        <button
+                            onClick={() => setShowCreateOrder(true)}
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+                        >
+                            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Create Order
+                        </button>
+                        <button
+                            onClick={() => setView('active')}
+                            className={`px-4 py-2 rounded-lg font-medium ${
+                                view === 'active'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                        >
+                            Active Orders
+                        </button>
+                        <button
+                            onClick={() => setView('history')}
+                            className={`px-4 py-2 rounded-lg font-medium ${
+                                view === 'history'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                        >
+                            Order History
+                        </button>
+                    </div>
+                </div>
 
                 {/* Statistics */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -248,166 +278,167 @@ const ManagerDashboard = () => {
                 </div>
 
                 {/* Orders List */}
-                <div className="bg-white shadow-lg rounded-lg mb-6 overflow-hidden">
-                    <div className="px-4 py-5 sm:p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-medium text-gray-900">Active Orders</h2>
-                            <div className="flex items-center space-x-2">
-                                <button
-                                    onClick={() => fetchData()}
-                                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                                >
-                                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                {view === 'active' ? (
+                    <div className="bg-white shadow-lg rounded-lg mb-6 overflow-hidden">
+                        <div className="px-4 py-5 sm:p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-medium text-gray-900">Active Orders</h2>
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        onClick={() => fetchData()}
+                                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                                    >
+                                        <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            {loading ? (
+                                <div className="flex justify-center items-center py-8">
+                                    <svg className="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Refresh
-                                </button>
-                            </div>
-                        </div>
-                        {loading ? (
-                            <div className="flex justify-center items-center py-8">
-                                <svg className="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Partner</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dispatch Time</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {orders.filter(order => order.status !== 'DELIVERED').map((order) => (
-                                            <tr key={order.id} className="hover:bg-gray-50 transition-colors duration-200">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderId}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.items}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                                                        {order.status}
-                                                    </span>
-                                                    {order.status === 'PREP' && (
-                                                        <div className="mt-1 text-xs text-gray-500">
-                                                            {(() => {
-                                                                const now = new Date();
-                                                                const created = new Date(order.createdAt);
-                                                                const prepTime = order.prepTime || 0;
-                                                                const readyTime = new Date(created.getTime() + prepTime * 60000);
-                                                                const remaining = Math.max(0, Math.ceil((readyTime - now) / 60000));
-                                                                return remaining > 0 ? `${remaining}min remaining` : 'Ready to serve';
-                                                            })()}
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {order.assignedPartner?.name || 'Not assigned'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {order.dispatchTime ? new Date(order.dispatchTime).toLocaleString() : 'Not set'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                    <div className="flex space-x-2">
-                                                        {(order.status === 'PREP' || order.status === 'READY') && !order.assignedPartner && (
-                                                            <button
-                                                                onClick={() => handleAssignClick(order)}
-                                                                className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                                            >
-                                                                <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                                </svg>
-                                                                Assign
-                                                            </button>
-                                                        )}
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Partner</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dispatch Time</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {orders.filter(order => order.status !== 'DELIVERED').map((order) => (
+                                                <tr key={order.id} className="hover:bg-gray-50 transition-colors duration-200">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderId}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.items}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                                                            {order.status}
+                                                        </span>
                                                         {order.status === 'PREP' && (
-                                                            (() => {
-                                                                const now = new Date();
-                                                                const created = new Date(order.createdAt);
-                                                                const prepTime = order.prepTime || 0;
-                                                                const readyTime = new Date(created.getTime() + prepTime * 60000);
-                                                                const remaining = Math.max(0, Math.ceil((readyTime - now) / 60000));
-                                                                const isEarly = remaining > 0;
-                                                                
-                                                                return (
-                                                                    <button
-                                                                        onClick={() => handleUpdateStatus(order.id, 'READY')}
-                                                                        className={`inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                                                                            isEarly 
-                                                                                ? 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-500' 
-                                                                                : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
-                                                                        }`}
-                                                                        title={isEarly ? `Marking ready ${remaining} minutes early` : 'Ready on time'}
-                                                                    >
-                                                                        <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                                        </svg>
-                                                                        {isEarly ? `Ready (${remaining}min early)` : 'Ready'}
-                                                                    </button>
-                                                                );
-                                                            })()
+                                                            <div className="mt-1 text-xs text-gray-500">
+                                                                {(() => {
+                                                                    const now = new Date();
+                                                                    const created = new Date(order.createdAt);
+                                                                    const prepTime = order.prepTime || 0;
+                                                                    const readyTime = new Date(created.getTime() + prepTime * 60000);
+                                                                    const remaining = Math.max(0, Math.ceil((readyTime - now) / 60000));
+                                                                    return remaining > 0 ? `${remaining}min remaining` : 'Ready to serve';
+                                                                })()}
+                                                            </div>
                                                         )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {order.assignedPartner?.name || 'Not assigned'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {order.dispatchTime ? new Date(order.dispatchTime).toLocaleString() : 'Not set'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                        <div className="flex space-x-2">
+                                                            {(order.status === 'PREP' || order.status === 'READY') && !order.assignedPartner && (
+                                                                <button
+                                                                    onClick={() => handleAssignClick(order)}
+                                                                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                                >
+                                                                    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                                    </svg>
+                                                                    Assign
+                                                                </button>
+                                                            )}
+                                                            {order.status === 'PREP' && (
+                                                                (() => {
+                                                                    const now = new Date();
+                                                                    const created = new Date(order.createdAt);
+                                                                    const prepTime = order.prepTime || 0;
+                                                                    const readyTime = new Date(created.getTime() + prepTime * 60000);
+                                                                    const remaining = Math.max(0, Math.ceil((readyTime - now) / 60000));
+                                                                    const isEarly = remaining > 0;
+                                                                    
+                                                                    return (
+                                                                        <button
+                                                                            onClick={() => handleUpdateStatus(order.id, 'READY')}
+                                                                            className={`inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
+                                                                                isEarly 
+                                                                                    ? 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-500' 
+                                                                                    : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
+                                                                            }`}
+                                                                            title={isEarly ? `Marking ready ${remaining} minutes early` : 'Ready on time'}
+                                                                        >
+                                                                            <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                            </svg>
+                                                                            {isEarly ? `Ready (${remaining}min early)` : 'Ready'}
+                                                                        </button>
+                                                                    );
+                                                                })()
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-
-                {/* Delivered Orders List */}
-                <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-                    <div className="px-4 py-5 sm:p-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4">Delivered Orders</h2>
-                        {loading ? (
-                            <div className="flex justify-center items-center py-8">
-                                <svg className="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Partner</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dispatch Time</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Time</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {orders.filter(order => order.status === 'DELIVERED').map((order) => (
-                                            <tr key={order.id} className="hover:bg-gray-50 transition-colors duration-200">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderId}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.items}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {order.assignedPartner?.name || '-'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {order.dispatchTime ? new Date(order.dispatchTime).toLocaleString() : 'Not set'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {new Date(order.updatedAt).toLocaleString()}
-                                                </td>
+                ) : (
+                    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+                        <div className="px-4 py-5 sm:p-6">
+                            <h2 className="text-lg font-medium text-gray-900 mb-4">Order History</h2>
+                            {loading ? (
+                                <div className="flex justify-center items-center py-8">
+                                    <svg className="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Partner</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dispatch Time</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Time</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {orders.filter(order => order.status === 'DELIVERED').map((order) => (
+                                                <tr key={order.id} className="hover:bg-gray-50 transition-colors duration-200">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderId}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.items}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {order.assignedPartner?.name || '-'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {order.dispatchTime ? new Date(order.dispatchTime).toLocaleString() : 'Not set'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {new Date(order.updatedAt).toLocaleString()}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
             </main>
 
             {/* Create Order Modal */}

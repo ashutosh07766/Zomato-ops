@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { orderApi, partnerApi } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const PartnerDashboard = () => {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
     const [partner, setPartner] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [view, setView] = useState('active'); // 'active' or 'history'
 
     useEffect(() => {
         fetchData();
@@ -124,23 +127,37 @@ const PartnerDashboard = () => {
                             {partner && (
                                 <div className="flex items-center space-x-2">
                                     <span className="text-sm text-gray-700">Status:</span>
-                                    <button
-                                        onClick={() => handleUpdateAvailability(!partner.isAvailable)}
-                                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
-                                            partner.isAvailable
-                                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                                : 'bg-red-100 text-red-800 hover:bg-red-200'
-                                        }`}
-                                    >
-                                        <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            {partner.isAvailable ? (
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            ) : (
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            )}
-                                        </svg>
-                                        {partner.isAvailable ? 'Available' : 'Unavailable'}
-                                    </button>
+                                    {(() => {
+                                        const hasActiveOrders = orders.some(order => order.status !== 'DELIVERED');
+                                        return (
+                                            <button
+                                                onClick={() => handleUpdateAvailability(!partner.isAvailable)}
+                                                disabled={hasActiveOrders}
+                                                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
+                                                    hasActiveOrders
+                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                        : partner.isAvailable
+                                                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                                            : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                                }`}
+                                                title={hasActiveOrders ? "Cannot change status while having active deliveries" : ""}
+                                            >
+                                                <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    {partner.isAvailable ? (
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    ) : (
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    )}
+                                                </svg>
+                                                {partner.isAvailable ? 'Available' : 'Unavailable'}
+                                                {hasActiveOrders && (
+                                                    <span className="ml-2 text-xs text-gray-500">
+                                                        (Active deliveries)
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })()}
                                 </div>
                             )}
                             <div className="flex items-center space-x-3">
@@ -176,6 +193,33 @@ const PartnerDashboard = () => {
                     </div>
                 )}
 
+                {/* View Toggle Buttons */}
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold text-gray-800">Partner Dashboard</h1>
+                    <div className="flex space-x-4">
+                        <button
+                            onClick={() => setView('active')}
+                            className={`px-4 py-2 rounded-lg font-medium ${
+                                view === 'active'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                        >
+                            Active Deliveries
+                        </button>
+                        <button
+                            onClick={() => setView('history')}
+                            className={`px-4 py-2 rounded-lg font-medium ${
+                                view === 'history'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                        >
+                            Delivery History
+                        </button>
+                    </div>
+                </div>
+
                 {/* Statistics */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div className="bg-white overflow-hidden shadow-lg rounded-lg transform transition-all duration-300 hover:scale-105">
@@ -188,7 +232,7 @@ const PartnerDashboard = () => {
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
+                                        <dt className="text-sm font-medium text-gray-500 truncate">Total Deliveries</dt>
                                         <dd className="text-3xl font-semibold text-gray-900">{orders.length}</dd>
                                     </dl>
                                 </div>
@@ -198,16 +242,16 @@ const PartnerDashboard = () => {
                     <div className="bg-white overflow-hidden shadow-lg rounded-lg transform transition-all duration-300 hover:scale-105">
                         <div className="px-4 py-5 sm:p-6">
                             <div className="flex items-center">
-                                <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
-                                    <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                                    <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">Current Status</dt>
+                                        <dt className="text-sm font-medium text-gray-500 truncate">Active Deliveries</dt>
                                         <dd className="text-3xl font-semibold text-gray-900">
-                                            {partner?.isAvailable ? 'Available' : 'Unavailable'}
+                                            {orders.filter(o => o.status !== 'DELIVERED').length}
                                         </dd>
                                     </dl>
                                 </div>
@@ -217,92 +261,142 @@ const PartnerDashboard = () => {
                 </div>
 
                 {/* Orders List */}
-                <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-                    <div className="px-4 py-5 sm:p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-medium text-gray-900">Order History</h2>
-                            <button
-                                onClick={() => fetchData()}
-                                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                            >
-                                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                Refresh
-                            </button>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dispatch Time</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Time</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {orders.map((order) => (
-                                        <tr key={order.id} className={`hover:bg-gray-50 transition-colors duration-200 ${order.status === 'DELIVERED' ? 'bg-gray-50' : ''}`}>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderId}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.items}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                                                    {order.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {order.dispatchTime ? new Date(order.dispatchTime).toLocaleString() : 'Not set'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {order.status === 'DELIVERED' ? new Date(order.updatedAt).toLocaleString() : '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <div className="flex space-x-2">
-                                                    {order.status === 'READY' && (
-                                                        <button
-                                                            onClick={() => handleUpdateStatus(order.id, 'PICKED')}
-                                                            className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                                        >
-                                                            <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                                            </svg>
-                                                            Pick Up
-                                                        </button>
-                                                    )}
-                                                    {order.status === 'PICKED' && (
-                                                        <button
-                                                            onClick={() => handleUpdateStatus(order.id, 'ON_ROUTE')}
-                                                            className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                                        >
-                                                            <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                                            </svg>
-                                                            Start Delivery
-                                                        </button>
-                                                    )}
-                                                    {order.status === 'ON_ROUTE' && (
-                                                        <button
-                                                            onClick={() => handleUpdateStatus(order.id, 'DELIVERED')}
-                                                            className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                                                        >
-                                                            <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                            </svg>
-                                                            Mark Delivered
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                {view === 'active' ? (
+                    <div className="bg-white shadow-lg rounded-lg mb-6 overflow-hidden">
+                        <div className="px-4 py-5 sm:p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-medium text-gray-900">Active Deliveries</h2>
+                                <div className="flex items-center space-x-2">
+                                    <button
+                                        onClick={() => fetchData()}
+                                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                                    >
+                                        <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            {loading ? (
+                                <div className="flex justify-center items-center py-8">
+                                    <svg className="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dispatch Time</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {orders.filter(order => order.status !== 'DELIVERED').map((order) => (
+                                                <tr key={order.id} className="hover:bg-gray-50 transition-colors duration-200">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderId}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.items}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                                                            {order.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {order.dispatchTime ? new Date(order.dispatchTime).toLocaleString() : 'Not set'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                        <div className="flex space-x-2">
+                                                            {order.status === 'READY' && (
+                                                                <button
+                                                                    onClick={() => handleUpdateStatus(order.id, 'PICKED')}
+                                                                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                                >
+                                                                    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                                                    </svg>
+                                                                    Pick Up
+                                                                </button>
+                                                            )}
+                                                            {order.status === 'PICKED' && (
+                                                                <button
+                                                                    onClick={() => handleUpdateStatus(order.id, 'ON_ROUTE')}
+                                                                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                                                >
+                                                                    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                                    </svg>
+                                                                    Start Delivery
+                                                                </button>
+                                                            )}
+                                                            {order.status === 'ON_ROUTE' && (
+                                                                <button
+                                                                    onClick={() => handleUpdateStatus(order.id, 'DELIVERED')}
+                                                                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                                                >
+                                                                    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                    Mark Delivered
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+                        <div className="px-4 py-5 sm:p-6">
+                            <h2 className="text-lg font-medium text-gray-900 mb-4">Delivery History</h2>
+                            {loading ? (
+                                <div className="flex justify-center items-center py-8">
+                                    <svg className="animate-spin h-8 w-8 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dispatch Time</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivery Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {orders.filter(order => order.status === 'DELIVERED').map((order) => (
+                                                <tr key={order.id} className="hover:bg-gray-50 transition-colors duration-200">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderId}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.items}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {order.dispatchTime ? new Date(order.dispatchTime).toLocaleString() : 'Not set'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {new Date(order.updatedAt).toLocaleString()}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );
