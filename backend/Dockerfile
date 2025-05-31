@@ -1,9 +1,11 @@
 # Build stage
 FROM maven:3.8.4-openjdk-17-slim AS build
 WORKDIR /app
-COPY . /app/backend
+COPY realgna/backend /app/backend
 WORKDIR /app/backend
-RUN mvn clean package -DskipTests
+RUN ls -la && \
+    pwd && \
+    mvn clean package -DskipTests
 
 # Run stage
 FROM openjdk:17-slim
