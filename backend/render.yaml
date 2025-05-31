@@ -1,9 +1,8 @@
 services:
   - type: web
     name: zomato-opspro-backend
-    env: java
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java -jar target/*.jar
+    env: docker
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
@@ -22,4 +21,12 @@ services:
       - key: JWT_SECRET
         value: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
       - key: ALLOWED_ORIGINS
-        value: https://zomato-opspro-frontend.onrender.com 
+        value: https://zomato-opspro-frontend.onrender.com
+      - key: SERVER_SERVLET_SESSION_COOKIE_SECURE
+        value: "true"
+      - key: SERVER_SERVLET_SESSION_COOKIE_SAME_SITE
+        value: "none"
+      - key: SERVER_SERVLET_SESSION_COOKIE_HTTP_ONLY
+        value: "true"
+    healthCheckPath: /api/auth/login
+    autoDeploy: true 
