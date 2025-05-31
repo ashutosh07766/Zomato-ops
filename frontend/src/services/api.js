@@ -10,20 +10,24 @@ const api = axios.create({
     },
 });
 
-// Add request interceptor for logging
+// Add request interceptor for JWT token
 api.interceptors.request.use(request => {
-    console.log('Starting Request:', request);
+    const token = localStorage.getItem('token');
+    if (token) {
+        request.headers.Authorization = `Bearer ${token}`;
+    }
     return request;
 });
 
-// Add response interceptor for logging
+// Add response interceptor for error handling
 api.interceptors.response.use(
-    response => {
-        console.log('Response:', response);
-        return response;
-    },
+    response => response,
     error => {
-        console.error('API Error:', error.response?.data || error.message);
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
         return Promise.reject(error);
     }
 );
@@ -31,7 +35,9 @@ api.interceptors.response.use(
 export const authApi = {
     login: async (username, password) => {
         const response = await api.post('/auth/login', { username, password });
-        return response.data;
+        const { token, ...userData } = response.data;
+        localStorage.setItem('token', token);
+        return userData;
     },
 };
 

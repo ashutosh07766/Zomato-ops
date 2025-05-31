@@ -2,8 +2,13 @@ package com.zomato.opspro.controller;
 
 import com.zomato.opspro.model.User;
 import com.zomato.opspro.service.UserService;
+import com.zomato.opspro.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.slf4j.Logger;
@@ -21,6 +26,12 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtTokenProvider tokenProvider;
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
@@ -32,32 +43,29 @@ public class AuthController {
                 return ResponseEntity.badRequest().body("Username and password are required");
             }
 
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    loginRequest.getUsername(),
+                    loginRequest.getPassword()
+                )
+            );
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String token = tokenProvider.generateToken(userDetails);
+
             User user = userService.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> {
-                    logger.error("User not found: {}", loginRequest.getUsername());
-                    return new RuntimeException("User not found");
-                });
-
-            logger.debug("User found in database: id={}, username={}, role={}", 
-                user.getId(), user.getUsername(), user.getRole());
-
-            boolean passwordMatches = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
-            logger.debug("Password match result: {}", passwordMatches);
-
-            if (!passwordMatches) {
-                logger.error("Invalid password for user: {}", loginRequest.getUsername());
-                return ResponseEntity.badRequest().body("Invalid credentials");
-            }
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
             logger.info("Login successful for user: {}", loginRequest.getUsername());
             return ResponseEntity.ok(new LoginResponse(
                 user.getId(),
                 user.getUsername(),
-                user.getRole()
+                user.getRole(),
+                token
             ));
         } catch (Exception e) {
             logger.error("Login error: ", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid credentials");
         }
     }
 
@@ -87,11 +95,13 @@ public class AuthController {
         private Long id;
         private String username;
         private User.Role role;
+        private String token;
 
-        public LoginResponse(Long id, String username, User.Role role) {
+        public LoginResponse(Long id, String username, User.Role role, String token) {
             this.id = id;
             this.username = username;
             this.role = role;
+            this.token = token;
         }
 
         public Long getId() {
@@ -104,6 +114,10 @@ public class AuthController {
 
         public User.Role getRole() {
             return role;
+        }
+
+        public String getToken() {
+            return token;
         }
     }
 } 
