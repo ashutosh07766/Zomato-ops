@@ -37,7 +37,7 @@ public class OrderService {
         }
         
         // Calculate dispatch time as prep time + 10 minutes from order creation
-        LocalDateTime dispatchTime = LocalDateTime.now().plusMinutes(order.getPrepTime() + 10);
+        LocalDateTime dispatchTime = LocalDateTime.now().plusMinutes(order.getPrepTime() + 8);
         order.setDispatchTime(dispatchTime);
         order.setStatus(OrderStatus.PREP);
         return orderRepository.save(order);
