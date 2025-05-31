@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: zomato-opspro-backend
+    env: java
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java -jar target/*.jar
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: 8082
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:h2:file:/var/lib/opspro/opsprodb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      - key: SPRING_DATASOURCE_USERNAME
+        value: sa
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: password
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: admin
+      - key: JWT_SECRET
+        value: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+      - key: ALLOWED_ORIGINS
+        value: https://zomato-opspro-frontend.onrender.com 
