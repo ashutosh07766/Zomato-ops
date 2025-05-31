@@ -1,7 +1,8 @@
 # Build stage
 FROM maven:3.8.4-openjdk-17-slim AS build
 WORKDIR /app
-COPY . .
+COPY . /app/backend
+WORKDIR /app/backend
 RUN mvn clean package -DskipTests
 
 # Run stage
@@ -12,7 +13,7 @@ WORKDIR /app
 RUN mkdir -p /var/lib/opspro /var/log/opspro
 
 # Copy the built jar from build stage
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/backend/target/*.jar app.jar
 
 # Set environment variables
 ENV SPRING_PROFILES_ACTIVE=prod
